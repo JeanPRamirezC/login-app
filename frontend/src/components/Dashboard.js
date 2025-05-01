@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { getRegistros } from "../services/api"; // Asegúrate de que esta función está configurada correctamente
+import { getRegistros, getUsuarios } from "../services/api"; // Asegúrate de que ambas funciones están correctamente configuradas
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [records, setRecords] = useState([]);
+  const [usuarios, setUsuarios] = useState([]); // Nuevo estado para usuarios
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -12,20 +13,33 @@ const Dashboard = () => {
       navigate("/login");
     }
 
+    // Obtener los registros de la API
     const fetchRecords = async () => {
       try {
-        const data = await getRegistros();  // Obtener los registros de la API
-        setRecords(data);  // Establecer los registros en el estado
+        const data = await getRegistros();
+        setRecords(data);
       } catch (error) {
         console.error("Error fetching records", error);
       }
     };
+
+    // Obtener los usuarios de la API
+    const fetchUsuarios = async () => {
+      try {
+        const data = await getUsuarios();
+        setUsuarios(data);
+      } catch (error) {
+        console.error("Error fetching users", error);
+      }
+    };
+
     fetchRecords();
+    fetchUsuarios();
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login"); // Redirigir al login
+    localStorage.removeItem("token");  // Eliminar el token de localStorage
+    navigate("/login"); // Redirigir al login después de cerrar sesión
   };
 
   return (
@@ -33,9 +47,6 @@ const Dashboard = () => {
       <div className="row justify-content-center">
         <div className="col-md-8">
           <h2 className="text-center">Registros</h2>
-          <button className="btn btn-danger w-100 mb-3" onClick={handleLogout}>
-            Cerrar Sesión
-          </button>
 
           <h4>Todos los Registros:</h4>
           {records.length === 0 ? (
@@ -65,6 +76,32 @@ const Dashboard = () => {
             </table>
           )}
 
+          <h4>Usuarios:</h4>
+          {usuarios.length === 0 ? (
+            <p>No hay usuarios disponibles.</p>
+          ) : (
+            <table className="table table-bordered mt-3">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuario</th>
+                  <th>Correo</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usuarios.map((usuario) => (
+                  <tr key={usuario.usuId}>
+                    <td>{usuario.usuId}</td>
+                    <td>{usuario.usuUsuario}</td>
+                    <td>{usuario.usuCorreo}</td>
+                    <td>{usuario.usuEstado === 1 ? "Activo" : "Inactivo"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
           <button
             className="btn btn-primary w-100 mt-3"
             onClick={() => navigate("/newRegister")}
@@ -73,21 +110,14 @@ const Dashboard = () => {
           </button>
           <button
             className="btn btn-primary w-100 mt-3"
-            onClick={() => navigate("/change-password")}
-          >
-            Cambiar Contraseña
-          </button>
-          <button
-            className="btn btn-primary w-100 mt-3"
             onClick={() => navigate("/newUser")}
           >
             Crear Usuario
           </button>
-          <button
-            className="btn btn-primary w-100 mt-3"
-            onClick={() => navigate("/view-users")}
-          >
-            Ver Usuarios
+
+          {/* Botón Cerrar Sesión al final */}
+          <button className="btn btn-danger w-100 mt-3" onClick={handleLogout}>
+            Cerrar Sesión
           </button>
         </div>
       </div>

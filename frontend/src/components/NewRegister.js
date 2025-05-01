@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createRegistro } from "../services/api"; // Asegúrate de que esta función esté correctamente configurada
+import { useNavigate } from "react-router-dom";
 
 const NewRegister = () => {
+  const navigate = useNavigate(); // Para redirigir al login si no hay token
   const [registerDetails, setRegisterDetails] = useState({
     regId: "",  // El ID del registro
     regNombre: "",
@@ -11,6 +13,13 @@ const NewRegister = () => {
     regEstado: 1,  // Suponiendo que el estado es "1" por defecto
   });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");  // Redirigir al login si no hay token
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -4,7 +4,6 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import NewRegister from "./components/NewRegister";
 import NewUser from "./components/NewUser";
-import ChangePassword from "./components/ChangePassword";
 
 
 function App() {
@@ -14,7 +13,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/newRegister" element={<NewRegister />} />
-        <Route path="/forgot-password" element={<ChangePassword />} />
         <Route path="/newUser" element={<NewUser />} />
       </Routes>
     </Router>

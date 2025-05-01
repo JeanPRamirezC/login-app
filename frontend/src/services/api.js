@@ -25,7 +25,7 @@ const setAuthToken = (token) => {
 export const getUsuarios = async () => {
   try {
     setAuthToken(getToken());  // Añadir el token a la solicitud
-    const response = await api.get('/usuarios');
+    const response = await api.get('/Usuarios');
     return response.data;
   } catch (error) {
     console.error('Error obteniendo los usuarios:', error);
