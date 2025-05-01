@@ -79,7 +79,7 @@ const Dashboard = () => {
           </button>
           <button
             className="btn btn-primary w-100 mt-3"
-            onClick={() => navigate("/new-user")}
+            onClick={() => navigate("/newUser")}
           >
             Crear Usuario
           </button>
