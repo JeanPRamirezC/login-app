@@ -1,19 +1,27 @@
 import React, { useState } from "react";
 import { loginUser } from "../services/api"; // Asegúrate de que la ruta sea correcta
+import { useNavigate } from "react-router-dom"; // Importa useNavigate
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const loginData = {
+      Correo: email, // Asegúrate de que 'email' es el valor de correo
+      Contrasenia: password, // Asegúrate de que 'password' es el valor de la contraseña
+    };
+
     try {
-      const response = await loginUser({ email, password });
-      localStorage.setItem("token", response.token); // Guardar el token
-      window.location.href = "/dashboard"; // Redirigir al Dashboard
+      const response = await loginUser(loginData); // Llamar la función con el JSON correcto
+      console.log(response);
+      navigate("/dashboard"); // Redirige al dashboard
     } catch (err) {
       setError("Credenciales incorrectas");
+      console.error(err);
     }
   };
 
@@ -46,18 +54,8 @@ const Login = () => {
             <button type="submit" className="btn btn-primary w-100 mb-3">
               Ingresar
             </button>
-            <button
-              type="button"
-              onClick={() => window.location.href = "/register"}
-              className="btn btn-link w-100 mb-3"
-            >
-              ¿No tienes una cuenta? Regístrate aquí
-            </button>
-            <a href="/forgot-password" className="d-block text-center">
-              ¿Olvidó su contraseña?
-            </a>
-            {error && <p className="text-danger text-center">{error}</p>}
           </form>
+          {error && <p className="text-danger text-center">{error}</p>}
         </div>
       </div>
     </div>

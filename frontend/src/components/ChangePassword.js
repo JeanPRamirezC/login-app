@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { resetPassword } from "../services/api"; // Asegúrate de que la ruta sea correcta
+import { changePassword } from "../services/api";
 
 const ChangePassword = () => {
   const [email, setEmail] = useState("");
@@ -14,8 +14,8 @@ const ChangePassword = () => {
       return;
     }
     try {
-      await resetPassword({ email, password });
-      window.location.href = "/login"; // Redirigir a login después de cambiar la contraseña
+      await changePassword({ email, password });
+      window.location.href = "/login"; // Redirigir al login después de cambiar la contraseña
     } catch (err) {
       setError("Error al cambiar la contraseña");
     }
