@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema; // 🔥 Necesario para usar [Table]
+using System.ComponentModel.DataAnnotations.Schema; //  Necesario para usar [Table]
 
 namespace Login.Models
 {
@@ -20,6 +20,6 @@ namespace Login.Models
         public string? UsuContrasenia { get; set; }
 
         [Column("usu_estado")] // Opcional
-        public int UsuEstado { get; set; } = 1;
+        public int? UsuEstado { get; set; }
     }
 }
