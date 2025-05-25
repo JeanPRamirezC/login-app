@@ -22,34 +22,27 @@ namespace Login.Controllers
             _configuration = configuration;
         }
 
-        // POST: api/login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             if (loginModel == null || string.IsNullOrEmpty(loginModel.Correo) || string.IsNullOrEmpty(loginModel.Contrasenia))
-            {
                 return BadRequest("Por favor, ingrese correo y contraseña.");
-            }
 
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.UsuCorreo == loginModel.Correo);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuCorreo == loginModel.Correo);
 
             if (usuario == null)
-            {
                 return Unauthorized("Correo no encontrado.");
-            }
 
             if (usuario.UsuContrasenia?.Trim() != loginModel.Contrasenia?.Trim())
-            {
                 return Unauthorized("Contraseña incorrecta.");
-            }
 
-            // Generar el token JWT
+            // Validar que tenga rol antes de permitir login exitoso
+            if (usuario.RolId == null)
+                return Forbid("Usuario sin rol asignado. Contacte al administrador.");
+
             var secretKey = _configuration["Jwt:SecretKey"];
             if (string.IsNullOrEmpty(secretKey))
-            {
                 throw new InvalidOperationException("La clave secreta JWT no está configurada.");
-            }
 
             var key = Encoding.UTF8.GetBytes(secretKey);
 
@@ -58,8 +51,9 @@ namespace Login.Controllers
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, usuario.UsuId.ToString()!),
-                    new Claim(ClaimTypes.Name, usuario.UsuCorreo!)
+                    new Claim(ClaimTypes.NameIdentifier, usuario.UsuId.ToString()),
+                    new Claim(ClaimTypes.Name, usuario.UsuCorreo!),
+                    new Claim(ClaimTypes.Role, usuario.RolId.Value.ToString())  // claim de rol
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
@@ -69,7 +63,13 @@ namespace Login.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new { mensaje = "Inicio de sesión exitoso", token = tokenString });
+            return Ok(new
+            {
+                mensaje = "Inicio de sesión exitoso",
+                token = tokenString,
+                rol = usuario.RolId,
+                usuarioId = usuario.UsuId
+            });
         }
     }
 }

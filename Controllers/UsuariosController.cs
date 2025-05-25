@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Login.Data;
 using Login.Models;
-using Microsoft.AspNetCore.Authorization;  // Asegúrate de importar este espacio de nombres
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Login.Controllers
 {
@@ -19,46 +20,99 @@ namespace Login.Controllers
 
         // GET: api/usuarios
         [HttpGet]
-        [Authorize]  // Agregar [Authorize] para proteger la ruta
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            return await _context.Usuarios.ToListAsync();
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
+            int? userRole = userRoleClaim != null && !string.IsNullOrEmpty(userRoleClaim.Value)
+                ? int.Parse(userRoleClaim.Value)
+                : (int?)null;
+
+            if (userRole == 1) // Administrador
+            {
+                return await _context.Usuarios
+                    .Include(u => u.Registro)
+                    .Include(u => u.Rol)
+                    .ToListAsync();
+            }
+            else if (userRole != null) // Empleado con rol válido
+            {
+                var usuario = await _context.Usuarios
+                    .Include(u => u.Registro)
+                    .Include(u => u.Rol)
+                    .Where(u => u.UsuId == userId)
+                    .ToListAsync();
+                return usuario;
+            }
+            else
+            {
+                return Forbid("Usuario sin rol. No puede acceder a esta información.");
+            }
         }
 
-        // GET: api/registros
+        // GET: api/usuarios/registros
         [HttpGet("registros")]
-        [Authorize]  // Agregar [Authorize] para proteger la ruta
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Registro>>> GetRegistros()
         {
-            var registros = await _context.Registros.ToListAsync(); // Obtener todos los registros
-            return Ok(registros); // Retornar los registros
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
+            int? userRole = userRoleClaim != null && !string.IsNullOrEmpty(userRoleClaim.Value)
+                ? int.Parse(userRoleClaim.Value)
+                : (int?)null;
+
+            if (userRole == 1) // Administrador ve todos
+            {
+                return await _context.Registros.ToListAsync();
+            }
+            else if (userRole != null)
+            {
+                var usuario = await _context.Usuarios.FindAsync(userId);
+                if (usuario == null || usuario.UsuRegistroId == null)
+                    return NotFound();
+
+                var registro = await _context.Registros
+                    .Where(r => r.RegId == usuario.UsuRegistroId)
+                    .ToListAsync();
+                return registro;
+            }
+            else
+            {
+                return Forbid("Usuario sin rol. No puede acceder a esta información.");
+            }
         }
 
-        // POST: api/usuarios
+        // POST: api/usuarios/crearUsuario
         [HttpPost("crearUsuario")]
-        [Authorize]  // Agregar [Authorize] para proteger la ruta
+        [Authorize]
         public async Task<ActionResult<Usuario>> CrearUsuario([FromBody] Usuario nuevoUsuario)
         {
-            if (nuevoUsuario == null)
-            {
-                return BadRequest("Datos de usuario inválidos.");
-            }
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
+            int? userRole = userRoleClaim != null && !string.IsNullOrEmpty(userRoleClaim.Value)
+                ? int.Parse(userRoleClaim.Value)
+                : (int?)null;
 
+            if (userRole != 1)
+                return Forbid("Solo un administrador puede crear usuarios.");
+
+            if (nuevoUsuario == null)
+                return BadRequest("Datos de usuario inválidos.");
+
+            // Se permite crear usuario con o sin rol asignado
             _context.Usuarios.Add(nuevoUsuario);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUsuarios), new { id = nuevoUsuario.UsuId }, nuevoUsuario);
         }
 
-        // POST: api/registros
+        // POST: api/usuarios/registro
         [HttpPost("registro")]
-        [Authorize]  // Agregar [Authorize] para proteger la ruta
+        [Authorize]
         public async Task<IActionResult> CrearRegistro([FromBody] Registro nuevoRegistro)
         {
             if (nuevoRegistro == null)
-            {
                 return BadRequest("Datos inválidos.");
-            }
 
             _context.Registros.Add(nuevoRegistro);
             await _context.SaveChangesAsync();
@@ -66,32 +120,55 @@ namespace Login.Controllers
             return CreatedAtAction(nameof(GetRegistros), new { id = nuevoRegistro.RegId }, nuevoRegistro);
         }
 
+        // POST: api/usuarios/asignarRol
+        [HttpPost("asignarRol")]
+        [Authorize]
+        public async Task<IActionResult> AsignarRol([FromBody] AsignarRolModel model)
+        {
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
+            int? userRole = userRoleClaim != null && !string.IsNullOrEmpty(userRoleClaim.Value)
+                ? int.Parse(userRoleClaim.Value)
+                : (int?)null;
+
+            if (userRole != 1)
+                return Forbid("Solo un administrador puede asignar roles.");
+
+            if (model == null || model.UsuarioId == 0 || model.RolId == 0)
+                return BadRequest("Datos inválidos.");
+
+            var usuario = await _context.Usuarios.FindAsync(model.UsuarioId);
+            if (usuario == null)
+                return NotFound("Usuario no encontrado.");
+
+            var rol = await _context.Set<Rol>().FindAsync(model.RolId);
+            if (rol == null)
+                return BadRequest("El rol especificado no existe.");
+
+            usuario.RolId = model.RolId;
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { mensaje = $"Rol asignado correctamente a {usuario.UsuCorreo}." });
+        }
+
         // PUT: api/usuarios/cambiarContrasena
         [HttpPut("cambiarContrasena")]
-        [Authorize]  // Agregar [Authorize] para proteger la ruta
+        [Authorize]
         public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaModel cambiarModel)
         {
-            // Validación de los datos
-            if (cambiarModel == null || string.IsNullOrEmpty(cambiarModel.Correo) || string.IsNullOrEmpty(cambiarModel.NuevaContrasena) || string.IsNullOrEmpty(cambiarModel.ConfirmarContrasena))
-            {
+            if (cambiarModel == null || string.IsNullOrEmpty(cambiarModel.Correo)
+                || string.IsNullOrEmpty(cambiarModel.NuevaContrasena)
+                || string.IsNullOrEmpty(cambiarModel.ConfirmarContrasena))
                 return BadRequest("Por favor, ingrese todos los datos correctamente.");
-            }
 
-            // Verificar que las contraseñas coincidan
             if (cambiarModel.NuevaContrasena != cambiarModel.ConfirmarContrasena)
-            {
                 return BadRequest("Las contraseñas no coinciden.");
-            }
 
-            // Buscar al usuario por correo
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuCorreo == cambiarModel.Correo);
 
             if (usuario == null)
-            {
                 return Unauthorized("Correo no encontrado.");
-            }
 
-            // Actualizar la contraseña del usuario
             usuario.UsuContrasenia = cambiarModel.NuevaContrasena;
 
             _context.Usuarios.Update(usuario);

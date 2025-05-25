@@ -3,14 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Login.Models
 {
-    [Table("tbl_roles")]
-    public class Rol
+    public class AsignarRolModel
     {
-        [Key]
-        [Column("rol_id")]
+        public int UsuarioId { get; set; }
         public int RolId { get; set; }
-
-        [Column("rol_nombre")]
-        public string? RolNombre { get; set; }
     }
+
 }
