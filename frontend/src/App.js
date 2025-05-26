@@ -1,19 +1,21 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./components/Login";
-import Dashboard from "./components/Dashboard";
-import NewRegister from "./components/NewRegister";
+import DashboardAdmin from "./components/DashboardAdmin";
+import DashboardEmpleado from "./components/DashboardEmpleado";
 import NewUser from "./components/NewUser";
+import AsignarRol from "./components/AsignarRol";
 
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/newRegister" element={<NewRegister />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/admin" element={<DashboardAdmin />} />
+        <Route path="/empleado" element={<DashboardEmpleado />} />
         <Route path="/newUser" element={<NewUser />} />
+        <Route path="/asignarRol" element={<AsignarRol />} />
       </Routes>
     </Router>
   );
