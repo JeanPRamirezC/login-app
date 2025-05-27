@@ -9,8 +9,9 @@ const DashboardAdmin = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    const rol = parseInt(sessionStorage.getItem("rol"));
-    if (!token || rol !== 1) {
+    const rol = sessionStorage.getItem("rol"); // ✅ corregido: string
+
+    if (!token || rol !== "Administrador") {
       navigate("/unauthorized");
     }
 
@@ -90,7 +91,6 @@ const DashboardAdmin = () => {
           </tbody>
         </table>
       )}
-
 
       <button className="btn btn-info w-100 mt-3" onClick={() => navigate("/newUser")}>
         Crear Usuario

@@ -107,4 +107,17 @@ export const assignRole = async (roleData) => {
   }
 };
 
+export const getRoles = async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await api.get('/Usuarios/roles');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo roles:', error);
+    throw error;
+  }
+};
 export default api;

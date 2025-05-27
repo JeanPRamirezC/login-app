@@ -8,8 +8,9 @@ const DashboardEmpleado = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    const rol = parseInt(sessionStorage.getItem("rol"));
-    if (!token || rol !== 2) {
+    const rol = sessionStorage.getItem("rol"); // ✅ ahora como string
+
+    if (!token || rol !== "Empleado") {
       navigate("/unauthorized");
     }
 

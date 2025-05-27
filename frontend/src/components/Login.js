@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { loginUser } from "../services/api";
+import { loginUser } from "../services/api"; // Asegúrate que esté bien importado
 import { useNavigate } from "react-router-dom";
-import { roleRoutes } from "../components/roleRoutes";
+import { roleRoutes } from "../components/roleRoutes"; // Mapa de rol → ruta
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,15 +22,15 @@ const Login = () => {
 
       // 🔐 Guardar datos de sesión
       sessionStorage.setItem("token", response.token);
-      sessionStorage.setItem("rol", response.rol);
+      sessionStorage.setItem("rol", response.rol); // ejemplo: "Administrador"
       sessionStorage.setItem("usuarioId", response.usuarioId);
 
-      // 🚀 Redirigir según rol
+      // 🚀 Redirigir según rol usando el mapa
       const path = roleRoutes[response.rol];
       if (path) {
         navigate(path);
       } else {
-        navigate("/unauthorized");
+        navigate("/unauthorized"); // Fallback si no hay ruta para el rol
       }
     } catch (err) {
       setError("Credenciales incorrectas");

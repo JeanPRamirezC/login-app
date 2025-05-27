@@ -1456,11 +1456,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\JeanR\\Documents\\REACT\\login-app\\Login.csproj",
+      "projectUniqueName": "C:\\Users\\JeanR\\Documents\\GitHub\\backen-login-v2\\Login.csproj",
       "projectName": "Login",
-      "projectPath": "C:\\Users\\JeanR\\Documents\\REACT\\login-app\\Login.csproj",
+      "projectPath": "C:\\Users\\JeanR\\Documents\\GitHub\\backen-login-v2\\Login.csproj",
       "packagesPath": "C:\\Users\\JeanR\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\JeanR\\Documents\\REACT\\login-app\\obj\\",
+      "outputPath": "C:\\Users\\JeanR\\Documents\\GitHub\\backen-login-v2\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\JeanR\\AppData\\Roaming\\NuGet\\NuGet.Config",

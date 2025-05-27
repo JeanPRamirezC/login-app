@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "9x+NuxzjCo0=",
+  "dgSpecHash": "XYnUODeq+S0=",
   "success": true,
-  "projectFilePath": "C:\\Users\\JeanR\\Documents\\REACT\\login-app\\Login.csproj",
+  "projectFilePath": "C:\\Users\\JeanR\\Documents\\GitHub\\backen-login-v2\\Login.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\JeanR\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.4\\microsoft.aspnetcore.authentication.jwtbearer.9.0.4.nupkg.sha512",
     "C:\\Users\\JeanR\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.4\\microsoft.aspnetcore.openapi.9.0.4.nupkg.sha512",

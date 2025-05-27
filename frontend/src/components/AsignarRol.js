@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { getUsuarios, assignRole } from "../services/api";
+import { getUsuarios, assignRole, getRoles } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const AsignarRol = () => {
   const navigate = useNavigate();
   const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]); // Lista dinámica de roles
   const [usuarioId, setUsuarioId] = useState("");
   const [rolId, setRolId] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -12,23 +13,27 @@ const AsignarRol = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    const rol = parseInt(sessionStorage.getItem("rol"));
+    const rol = sessionStorage.getItem("rol");
 
-    if (!token || rol !== 1) {
+    if (!token || rol !== "Administrador") {
       navigate("/unauthorized");
     }
 
-    const cargarUsuarios = async () => {
+    const cargarDatos = async () => {
       try {
-        const data = await getUsuarios();
-        setUsuarios(data);
+        const [usuariosData, rolesData] = await Promise.all([
+          getUsuarios(),
+          getRoles(),
+        ]);
+        setUsuarios(usuariosData);
+        setRoles(rolesData);
       } catch (err) {
         console.error(err);
-        setError("Error al obtener los usuarios.");
+        setError("Error al cargar usuarios o roles.");
       }
     };
 
-    cargarUsuarios();
+    cargarDatos();
   }, [navigate]);
 
   const handleSubmit = async (e) => {
@@ -49,21 +54,13 @@ const AsignarRol = () => {
       setUsuarioId("");
       setRolId("");
 
-      // recargar usuarios actualizados
+      // Recargar usuarios
       const updated = await getUsuarios();
       setUsuarios(updated);
     } catch (err) {
       console.error(err);
       setError("Error al asignar el rol.");
       setMensaje("");
-    }
-  };
-
-  const obtenerNombreRol = (rolId) => {
-    switch (rolId) {
-      case 1: return "Administrador";
-      case 2: return "Empleado";
-      default: return "Sin Rol";
     }
   };
 
@@ -81,7 +78,7 @@ const AsignarRol = () => {
           <option value="">Selecciona un usuario</option>
           {usuarios.map((u) => (
             <option key={u.usuId} value={u.usuId}>
-              {u.usuUsuario} - {u.usuCorreo} ({obtenerNombreRol(u.rolId)})
+              {u.usuUsuario} - {u.usuCorreo} ({u.rol?.rolNombre || "Sin Rol"})
             </option>
           ))}
         </select>
@@ -93,8 +90,11 @@ const AsignarRol = () => {
           required
         >
           <option value="">Selecciona un rol</option>
-          <option value={1}>Administrador</option>
-          <option value={2}>Empleado</option>
+          {roles.map((r) => (
+            <option key={r.rolId} value={r.rolId}>
+              {r.rolNombre}
+            </option>
+          ))}
         </select>
 
         <button type="submit" className="btn btn-primary w-100">
@@ -121,7 +121,7 @@ const AsignarRol = () => {
               <td>{u.usuId}</td>
               <td>{u.usuUsuario}</td>
               <td>{u.usuCorreo}</td>
-              <td>{obtenerNombreRol(u.rolId)}</td>
+              <td>{u.rol?.rolNombre || "Sin Rol"}</td>
             </tr>
           ))}
         </tbody>
@@ -131,3 +131,4 @@ const AsignarRol = () => {
 };
 
 export default AsignarRol;
+
