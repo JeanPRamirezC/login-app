@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { loginUser } from "../services/api"; // Asegúrate de que la ruta sea correcta
-import { useNavigate } from "react-router-dom"; // Importa useNavigate
+import { loginUser } from "../services/api"; // Asegúrate que esté bien importado
+import { useNavigate } from "react-router-dom";
+import { roleRoutes } from "../components/roleRoutes"; // Mapa de rol → ruta
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,15 +11,27 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const loginData = {
-      Correo: email, // Asegúrate de que 'email' es el valor de correo
-      Contrasenia: password, // Asegúrate de que 'password' es el valor de la contraseña
+      Correo: email,
+      Contrasenia: password
     };
 
     try {
-      const response = await loginUser(loginData); // Llamar la función con el JSON correcto
-      console.log(response);
-      navigate("/dashboard"); // Redirige al dashboard
+      const response = await loginUser(loginData);
+
+      // 🔐 Guardar datos de sesión
+      sessionStorage.setItem("token", response.token);
+      sessionStorage.setItem("rol", response.rol); // ejemplo: "Administrador"
+      sessionStorage.setItem("usuarioId", response.usuarioId);
+
+      // 🚀 Redirigir según rol usando el mapa
+      const path = roleRoutes[response.rol];
+      if (path) {
+        navigate(path);
+      } else {
+        navigate("/unauthorized"); // Fallback si no hay ruta para el rol
+      }
     } catch (err) {
       setError("Credenciales incorrectas");
       console.error(err);

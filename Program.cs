@@ -7,18 +7,32 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Agregar servicios al contenedor
+// 🔐 CORS: permitir solicitudes desde React en localhost:3000
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // origen de tu frontend
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+// 🗄️ Base de datos: PostgreSQL + EF Core
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-            .EnableSensitiveDataLogging() 
-            .EnableDetailedErrors() 
+           .EnableSensitiveDataLogging()
+           .EnableDetailedErrors()
 );
 
+// 📝 Controladores y logs
 builder.Services.AddControllers();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
-// Configuración de JWT
+// 🔐 Autenticación JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -42,11 +56,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Habilitar Endpoints y Swagger
+// 📚 Swagger con soporte para JWT
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    // Agregar seguridad de JWT a Swagger
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
@@ -74,16 +87,20 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Configurar Middleware
+// 🧪 Swagger solo en entorno de desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Usar autenticación y autorización
+// ✅ Habilitar CORS antes de autenticación
+app.UseCors(myAllowSpecificOrigins);
+
+// 🔐 Middleware de seguridad
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();

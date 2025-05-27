@@ -1,18 +1,17 @@
 import axios from 'axios';
 
-// Configurar la base URL de la API
+// Base URL de tu backend
 const api = axios.create({
-  baseURL: 'http://localhost:5049/api', // Puerto y ruta correcta
+  baseURL: 'http://localhost:5049/api',
   headers: {
-    'Content-Type': 'application/json',  // Indica que el cuerpo de la solicitud es JSON
+    'Content-Type': 'application/json',
   },
 });
 
+// 🟡 Obtener token desde sessionStorage (no localStorage)
+const getToken = () => sessionStorage.getItem('token');
 
-// Obtener el token almacenado en localStorage
-const getToken = () => localStorage.getItem('token');
-
-// Configurar el token en los encabezados de las solicitudes
+// 🔐 Inyectar token en encabezados
 const setAuthToken = (token) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -21,10 +20,26 @@ const setAuthToken = (token) => {
   }
 };
 
-// Función para obtener todos los usuarios
+// 🚀 Iniciar sesión
+export const loginUser = async (loginData) => {
+  try {
+    const response = await api.post('/Login/login', loginData);
+    if (response.data?.token) {
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('rol', response.data.rol);
+      sessionStorage.setItem('usuarioId', response.data.usuarioId);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+    throw error;
+  }
+};
+
+// 👥 Obtener usuarios
 export const getUsuarios = async () => {
   try {
-    setAuthToken(getToken());  // Añadir el token a la solicitud
+    setAuthToken(getToken());
     const response = await api.get('/Usuarios');
     return response.data;
   } catch (error) {
@@ -33,10 +48,10 @@ export const getUsuarios = async () => {
   }
 };
 
-// Función para obtener todos los registros
+// 📄 Obtener registros
 export const getRegistros = async () => {
   try {
-    setAuthToken(getToken());  // Añadir el token a la solicitud
+    setAuthToken(getToken());
     const response = await api.get('/Usuarios/registros');
     return response.data;
   } catch (error) {
@@ -45,10 +60,11 @@ export const getRegistros = async () => {
   }
 };
 
-// Función para registrar un nuevo usuario
+// ➕ Registrar usuario
 export const registerUser = async (userData) => {
   try {
-    const response = await api.post('/Usuarios/crearUsuario', userData); // Endpoint ajustado a tu controlador
+    setAuthToken(getToken());
+    const response = await api.post('/Usuarios/crearUsuario', userData);
     return response.data;
   } catch (error) {
     console.error('Error registrando el usuario:', error);
@@ -56,27 +72,11 @@ export const registerUser = async (userData) => {
   }
 };
 
-export const loginUser = async (loginData) => {
-  try {
-    const response = await api.post('/Login/login', loginData); // Ruta correcta
-    if (response.data && response.data.token) {
-      // Guarda el token si la respuesta es exitosa
-      localStorage.setItem('token', response.data.token);
-    }
-    return response.data; // Retorna la respuesta
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error);
-    throw error;
-  }
-};
-
-
-
-// Función para cambiar la contraseña
+// 🛠️ Cambiar contraseña
 export const changePassword = async (changeData) => {
   try {
-    setAuthToken(getToken());  // Añadir el token a la solicitud
-    const response = await api.put('/cambiarContrasena', changeData); // Endpoint para cambiar contraseña
+    setAuthToken(getToken());
+    const response = await api.put('/Usuarios/cambiarContrasena', changeData); // FIX: ruta corregida
     return response.data;
   } catch (error) {
     console.error('Error al cambiar la contraseña:', error);
@@ -84,11 +84,11 @@ export const changePassword = async (changeData) => {
   }
 };
 
-// Función para crear un nuevo registro
+// ➕ Crear nuevo registro
 export const createRegistro = async (registroData) => {
   try {
-    setAuthToken(getToken());  // Añadir el token a la solicitud
-    const response = await api.post('/Usuarios/registro', registroData); // Endpoint para crear registro
+    setAuthToken(getToken());
+    const response = await api.post('/Usuarios/registro', registroData);
     return response.data;
   } catch (error) {
     console.error('Error creando el registro:', error);
@@ -96,4 +96,28 @@ export const createRegistro = async (registroData) => {
   }
 };
 
+export const assignRole = async (roleData) => {
+  try {
+    setAuthToken(getToken()); // Inyecta el token en el header Authorization
+    const response = await api.post('/Usuarios/asignarRol', roleData);
+    return response.data;
+  } catch (error) {
+    console.error('Error asignando el rol:', error);
+    throw error;
+  }
+};
+
+export const getRoles = async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await api.get('/Usuarios/roles');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo roles:', error);
+    throw error;
+  }
+};
 export default api;

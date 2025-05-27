@@ -1,38 +1,64 @@
 import React, { useState, useEffect } from "react";
-import { registerUser } from "../services/api"; // Asegúrate de que esta función esté correctamente configurada
+import { registerUser } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const NewUser = () => {
-  const navigate = useNavigate(); // Para redirigir al login si no hay token
-  const [userDetails, setUserDetails] = useState({
-    usuId: "",        // Agregado el campo usuId para que el usuario lo ingrese manualmente
-    usuUsuario: "",   // Usuario
-    usuCorreo: "",    // Correo
-    usuContrasenia: "", // Contraseña
-    usuEstado: 1,     // Estado (por defecto, activo)
-  });
+  const navigate = useNavigate();
   const [error, setError] = useState("");
 
+  const [userDetails, setUserDetails] = useState({
+    usuId: 0,
+    usuUsuario: "",
+    usuCorreo: "",
+    usuContrasenia: "",
+    usuEstado: 1,
+    rolId: null,           // Se mantiene null según tu ejemplo
+    usuRegistroId: null,   // Se mantiene null según tu ejemplo
+    rol: null,             // omitido en el envío, o puedes incluir como null
+    registro: {
+      regId: 0,
+      regNombre: "",
+      regApellido: "",
+      regTelefono: "",
+      regEstado: 1,
+      regFechaNacimiento: ""
+    }
+  });
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) {
-      navigate("/login");  // Redirigir a login si no hay token
+      navigate("/login");
     }
   }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserDetails({ ...userDetails, [name]: value });
+
+    if (name.startsWith("reg")) {
+      setUserDetails((prev) => ({
+        ...prev,
+        registro: {
+          ...prev.registro,
+          [name]: value
+        }
+      }));
+    } else {
+      setUserDetails((prev) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Aquí estamos enviando todos los datos, incluido el usuId
       await registerUser(userDetails);
-      window.location.href = "/dashboard"; // Redirigir al dashboard después de registrar
+      navigate("/admin"); // o /empleado según redirección por rol
     } catch (err) {
-      setError("Error al registrar el usuario");
+      console.error(err);
+      setError("Error al registrar el usuario.");
     }
   };
 
@@ -40,56 +66,80 @@ const NewUser = () => {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <h2 className="text-center">Crear Nuevo Usuario</h2>
+          <h2 className="text-center">Crear Usuario</h2>
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <input
-                type="number"
-                name="usuId"  // Campo para ingresar el ID del usuario
-                value={userDetails.usuId}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="ID de Usuario"
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <input
-                type="text"
-                name="usuUsuario"  // Campo para el nombre de usuario
-                value={userDetails.usuUsuario}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Usuario"
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <input
-                type="email"
-                name="usuCorreo"  // Campo para el correo del usuario
-                value={userDetails.usuCorreo}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Correo"
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <input
-                type="password"
-                name="usuContrasenia"  // Campo para la contraseña
-                value={userDetails.usuContrasenia}
-                onChange={handleChange}
-                className="form-control"
-                placeholder="Contraseña"
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary w-100 mb-3">
-              Confirmar
+            {/* Datos del usuario */}
+            <input
+              type="text"
+              name="usuUsuario"
+              value={userDetails.usuUsuario}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Nombre de Usuario"
+              required
+            />
+            <input
+              type="email"
+              name="usuCorreo"
+              value={userDetails.usuCorreo}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Correo"
+              required
+            />
+            <input
+              type="password"
+              name="usuContrasenia"
+              value={userDetails.usuContrasenia}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Contraseña"
+              required
+            />
+
+            {/* Datos del registro */}
+            <input
+              type="text"
+              name="regNombre"
+              value={userDetails.registro.regNombre}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Nombre"
+              required
+            />
+            <input
+              type="text"
+              name="regApellido"
+              value={userDetails.registro.regApellido}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Apellido"
+              required
+            />
+            <input
+              type="text"
+              name="regTelefono"
+              value={userDetails.registro.regTelefono}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Teléfono"
+              required
+            />
+            <input
+              type="date"
+              name="regFechaNacimiento"
+              value={userDetails.registro.regFechaNacimiento}
+              onChange={handleChange}
+              className="form-control mb-3"
+              placeholder="Fecha de Nacimiento"
+              required
+            />
+
+            <button type="submit" className="btn btn-primary w-100">
+              Crear Usuario
             </button>
-            {error && <p className="text-danger text-center">{error}</p>}
+
+            {error && <p className="text-danger text-center mt-2">{error}</p>}
           </form>
         </div>
       </div>
@@ -98,3 +148,4 @@ const NewUser = () => {
 };
 
 export default NewUser;
+
